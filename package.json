@@ -1,0 +1,7 @@
+{
+  "name": "svg-pan-zoom",
+  "devDependencies": {
+    "esbuild": "^0.20.2",
+    "esbuild-server": "^0.3.0"
+  }
+}

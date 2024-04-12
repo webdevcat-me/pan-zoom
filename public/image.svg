@@ -1,0 +1,82 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg viewBox="0 0 400 300" version="1.1" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    svg {
+      overflow: hidden;
+    }
+
+    circle, rect {
+      fill-opacity: 0.9;
+    }
+  </style>
+  <script type="text/javascript">//<![CDATA[
+    const svgns = 'http://www.w3.org/2000/svg',
+      svg = document.querySelector('svg'),
+      { width: vbWidth, height: vbHeight } = svg.viewBox.baseVal,
+      shapeCount = 100,
+      maxColorValue = 256,
+      circleRadius = { max: 45, min: 5 },
+      rectSideLength = { max: 95, min: 5 };
+
+    function getRandomInt(max) {
+      return Math.floor(Math.random() * max);
+    }
+
+    function getRandomPositiveInt(max) {
+      return getRandomInt(max) + 1;
+    }
+
+    function getRandomFillAndStrokeVals() {
+      const shadeFactor = Math.random(),
+        fill = ['r', 'g', 'b'].map(() => getRandomInt(maxColorValue)),
+        stroke = fill.map(v => Math.floor(v * shadeFactor));
+
+      return {
+        fill: fill,
+        stroke: stroke
+      };
+    }
+
+    function getRandomCircle(fill, stroke) {
+      const el = document.createElementNS(svgns, 'circle'),
+        r = getRandomPositiveInt(circleRadius.max) + circleRadius.min;
+
+      el.setAttributeNS(null, 'cx', getRandomInt(vbWidth));
+      el.setAttributeNS(null, 'cy', getRandomInt(vbHeight));
+      el.setAttributeNS(null, 'r', r);
+      el.setAttributeNS(null, 'fill', fill);
+      el.setAttributeNS(null, 'stroke', stroke);
+
+      return el;
+    }
+
+    function getRandomRect(fill, stroke) {
+      const el = document.createElementNS(svgns, 'rect'),
+        [width, height] = ['w', 'h'].map(() =>
+          getRandomPositiveInt(rectSideLength.max) + rectSideLength.min
+        );
+
+      el.setAttributeNS(null, 'x', getRandomInt(vbWidth));
+      el.setAttributeNS(null, 'y', getRandomInt(vbHeight));
+      el.setAttributeNS(null, 'width', width);
+      el.setAttributeNS(null, 'height', height);
+      el.setAttributeNS(null, 'fill', fill);
+      el.setAttributeNS(null, 'stroke', stroke);
+
+      return el;
+    }
+
+    function getRandomShape({ fill: fillVals, stroke: strokeVals }) {
+      const shapes = [getRandomCircle, getRandomRect],
+        [fill, stroke] = [fillVals, strokeVals].map(v => `rgb(${v.join(', ')})`);
+
+      return shapes[getRandomInt(shapes.length)](fill, stroke);
+    }
+
+    [...Array(shapeCount)]
+      .map(() => getRandomFillAndStrokeVals())
+      .forEach(fillAndStrokeVal => svg.appendChild(getRandomShape(fillAndStrokeVal)));
+  //]]></script>
+</svg>

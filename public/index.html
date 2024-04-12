@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>SVG Pan & Zoom Example</title>
+    <style>
+      body {
+        text-align: center;
+        max-width: 100vw;
+      }
+
+      object {
+        max-height: 400px;
+        max-width: 100%;
+        background-color: lightsteelblue;
+        border: 1px solid steelblue;
+        touch-action: none;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Pan & Zoom an SVG Image with JavaScript</h1>
+
+    <p>
+      Click and drag on the image to pan. Use the mouse wheel
+      to zoom in and out.
+    </p>
+
+    <object type="image/svg+xml" data="image.svg"></object>
+    <script src="app.js"></script>
+  </body>
+</html>
