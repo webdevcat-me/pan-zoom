@@ -1,7 +1,12 @@
 {
-  "name": "svg-pan-zoom",
+  "name": "pan-zoom",
+  "version": "0.1.0",
+  "browser": "index.js",
   "devDependencies": {
     "esbuild": "^0.20.2",
     "esbuild-server": "^0.3.0"
-  }
+  },
+  "files": [
+    "./src/modules"
+  ]
 }

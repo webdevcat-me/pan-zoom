@@ -1,57 +1,56 @@
-const zoomStepRatio = 0.25,
-  positive = 1,
-  negative = -1;
-
-function toLocalCoords(svg, x, y) {
-  const clientP = new DOMPoint(x, y);
-
-  return clientP.matrixTransform(svg.getScreenCTM().inverse());
-}
+import getComputedTransformMatrix from './utils.js';
 
 function zoomIn(deltaY) {
   return deltaY < 0;
 }
 
-function calcSizeChangeAmounts(width, height) {
+function getScale(e, factor) {
+  return zoomIn(e.deltaY) ? 1 + factor : 1 - factor;
+}
+
+function getFocalPointBeforeTransform(el, e) {
+  const { x, y, width, height } = el.getBoundingClientRect();
+
   return {
-    width: width * zoomStepRatio,
-    height: height * zoomStepRatio
+    x: e.clientX,
+    y: e.clientY,
+    relativeToImageSize: {
+      x: (e.clientX - x) / width,
+      y: (e.clientY - y) / height
+    }
   };
 }
 
-function calcValChangeRatios(focusPoint, x, y, width, height) {
+function getFocalPointAfterTransform(el, fpBeforeTrans) {
+  const { x, y, width, height } = el.getBoundingClientRect(),
+    relativeFocalPoint = fpBeforeTrans.relativeToImageSize;
+
   return {
-    x: (focusPoint.x - x) / width,
-    y: (focusPoint.y - y) / height,
-    width: (width + x - focusPoint.x) / width,
-    height: (height + y - focusPoint.y) / height
+    x: x + width * relativeFocalPoint.x,
+    y: y + height * relativeFocalPoint.y
   };
 }
 
-function calcValChangeAmounts(focusPoint, x, y, width, height) {
-  const changeAmount = calcSizeChangeAmounts(width, height),
-    valChangeRatio = calcValChangeRatios(focusPoint, x, y, width, height);
+function getTranslateMatrix(el, e, scaleMatrix) {
+  const fpBeforeTrans = getFocalPointBeforeTransform(el, e);
 
-  return {
-    x: valChangeRatio.x * changeAmount.width,
-    y: valChangeRatio.y * changeAmount.height,
-    width: valChangeRatio.width * changeAmount.width,
-    height: valChangeRatio.height * changeAmount.height
-  };
+  el.style.transform = scaleMatrix;
+
+  const fpAfterTrans = getFocalPointAfterTransform(el, fpBeforeTrans),
+    translateMatrix = new DOMMatrix();
+
+  return translateMatrix.translate(
+    fpBeforeTrans.x - fpAfterTrans.x,
+    fpBeforeTrans.y - fpAfterTrans.y
+  );
 }
 
-export default function (svg, e) {
-  const pointerPosition = toLocalCoords(svg, e.clientX, e.clientY),
-    sign = zoomIn(e.deltaY) ? positive : negative,
-    { x, y, width, height } = svg.viewBox.baseVal,
-    changeAmount = calcValChangeAmounts(pointerPosition, x, y, width, height),
+export default function (el, e, factor = 0.1) {
+  e.preventDefault();
 
-    attr = {
-      x: x + sign * changeAmount.x,
-      y: y + sign * changeAmount.y,
-      width: width + sign * (-changeAmount.x - changeAmount.width),
-      height: height + sign * (-changeAmount.y - changeAmount.height)
-    };
+  const mtx = getComputedTransformMatrix(el),
+    scale = getScale(e, factor),
+    transMtx = getTranslateMatrix(el, e, mtx.scale(scale));
 
-  return `${attr.x} ${attr.y} ${attr.width} ${attr.height}`;
+  el.style.transform = transMtx.multiply(mtx).scale(scale);
 }

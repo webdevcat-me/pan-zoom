@@ -1,4 +1,13 @@
+import getComputedTransformMatrix from './utils.js';
+
 const minDistanceThreshold = 5;
+
+function setToCurrentPointerCoords(point, e) {
+  point.x = e.clientX;
+  point.y = e.clientY;
+
+  return point;
+}
 
 function distanceBetween({ x: x1, y: y1 }, { x: x2, y: y2 }) {
   return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
@@ -8,46 +17,21 @@ function minDistanceThresholdIsMet(startPt, endPt) {
   return distanceBetween(startPt, endPt) >= minDistanceThreshold;
 }
 
-function getPositionChangeInLocalCoords(svg, startPt, endPt) {
-  const matrix = svg.getScreenCTM().inverse(),
-    localStartPt = startPt.matrixTransform(matrix),
-    localEndPt = endPt.matrixTransform(matrix);
-
-  return {
-    x: localStartPt.x - localEndPt.x,
-    y: localStartPt.y - localEndPt.y
-  };
+function stopEventPropagationToChildren(el, type) {
+  el.addEventListener(type, e => e.stopPropagation(), { capture: true, once: true });
 }
 
-function stopEventPropagationToChildren(svg, type) {
-  svg.addEventListener(type, e => e.stopPropagation(), { capture: true, once: true });
+function getTranslateMatrix(startPt, movePt) {
+  const translateMatrix = new DOMMatrix();
+
+  return translateMatrix.translate(movePt.x - startPt.x, movePt.y - startPt.y);
 }
 
-function setToCurrentPointerCoords(point, e) {
-  point.x = e.clientX;
-  point.y = e.clientY;
+export default function (el, e) {
+  e.preventDefault();
 
-  return point;
-}
-
-function getPanCoords(svg, startPt, movePt, initialPos) {
-  const posChange = getPositionChangeInLocalCoords(svg, startPt, movePt);
-
-  return {
-    x: initialPos.x + posChange.x,
-    y: initialPos.y + posChange.y
-  };
-}
-
-function setViewBoxPosition(svg, { x, y }) {
-  const { width, height } = svg.viewBox.baseVal;
-
-  svg.setAttributeNS(null, 'viewBox', `${x} ${y} ${width} ${height}`);
-}
-
-export default function (svg, e) {
-  const { x, y } = svg.viewBox.baseVal,
-    startPt = setToCurrentPointerCoords(new DOMPoint(), e),
+  const mtx = getComputedTransformMatrix(el),
+    startPt = new DOMPoint(e.clientX, e.clientY),
     movePt = new DOMPoint();
 
   let isPanning = false;
@@ -59,19 +43,19 @@ export default function (svg, e) {
       isPanning = true;
       e.target.setPointerCapture(e.pointerId);
       setToCurrentPointerCoords(startPt, e);
-      stopEventPropagationToChildren(svg, 'click');
+      stopEventPropagationToChildren(el, 'click');
     }
 
     if (isPanning) {
-      setViewBoxPosition(svg, getPanCoords(svg, startPt, movePt, { x, y }));
+      el.style.transform = getTranslateMatrix(startPt, movePt).multiply(mtx);
     }
   }
 
-  svg.addEventListener('pointermove', pointerMove);
+  el.addEventListener('pointermove', pointerMove);
 
-  svg.addEventListener(
+  el.addEventListener(
     'pointerup',
-    () => svg.removeEventListener('pointermove', pointerMove),
+    () => el.removeEventListener('pointermove', pointerMove),
     { once: true }
   );
 }

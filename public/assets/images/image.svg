@@ -1,0 +1,108 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg viewBox="-200 -150 400 300" version="1.1" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    svg {
+      overflow: hidden;
+      border: 1px solid silver;
+      transform: scale(0.9);
+    }
+
+    circle, rect {
+      fill-opacity: 0.9;
+      filter: drop-shadow(5px 5px 2px rgba(0, 0, 0, .5));
+    }
+  </style>
+  <script type="text/javascript">//<![CDATA[
+    const svgns = 'http://www.w3.org/2000/svg',
+      svg = document.querySelector('svg'),
+      { x: vbX, y: vbY, width: vbWidth, height: vbHeight } = svg.viewBox.baseVal,
+
+      shapeCount = 100,
+      circleRadius = { min: 5, max: 45 },
+      rectSideLength = { min: 5, max: 95 },
+      colorValRange = { min: 0, max: 255 },
+      shadeFactorRange = { min: 0.3, max: 0.7 };
+
+    // source: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random#getting_a_random_integer_between_two_values_inclusive
+    function getRandomIntInclusive(min, max) {
+      const minCeiled = Math.ceil(min),
+        maxFloored = Math.floor(max);
+
+      return Math.floor(Math.random() * (maxFloored - minCeiled + 1) + minCeiled);
+    }
+
+    // source: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random#getting_a_random_number_between_two_values
+    function getRandomArbitrary(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    function getRandomColorValue() {
+      return getRandomIntInclusive(colorValRange.min, colorValRange.max);
+    }
+
+    function getRandomShadeFactor() {
+      return getRandomArbitrary(shadeFactorRange.min, shadeFactorRange.max);
+    }
+
+    function getRandomOrigin() {
+      return {
+        x: getRandomIntInclusive(vbX, vbX + vbWidth),
+        y: getRandomIntInclusive(vbY, vbY + vbHeight)
+      }
+    }
+
+    function getRandomFillAndStrokeVals() {
+      const fill = ['r', 'g', 'b'].map(() => getRandomColorValue()),
+        stroke = fill.map(v => Math.floor(v * getRandomShadeFactor()));
+
+      return {
+        fill: fill,
+        stroke: stroke
+      };
+    }
+
+    function getRandomCircle(fill, stroke) {
+      const el = document.createElementNS(svgns, 'circle'),
+        r = getRandomIntInclusive(circleRadius.max, circleRadius.min),
+        origin = getRandomOrigin();
+
+      el.setAttributeNS(null, 'cx', origin.x);
+      el.setAttributeNS(null, 'cy', origin.y);
+      el.setAttributeNS(null, 'r', r);
+      el.setAttributeNS(null, 'fill', fill);
+      el.setAttributeNS(null, 'stroke', stroke);
+
+      return el;
+    }
+
+    function getRandomRect(fill, stroke) {
+      const el = document.createElementNS(svgns, 'rect'),
+        [width, height] = ['w', 'h'].map(() =>
+          getRandomIntInclusive(rectSideLength.max, rectSideLength.min)
+        ),
+        origin = getRandomOrigin();
+
+      el.setAttributeNS(null, 'x', origin.x);
+      el.setAttributeNS(null, 'y', origin.y);
+      el.setAttributeNS(null, 'width', width);
+      el.setAttributeNS(null, 'height', height);
+      el.setAttributeNS(null, 'fill', fill);
+      el.setAttributeNS(null, 'stroke', stroke);
+
+      return el;
+    }
+
+    function getRandomShape({ fill: fillVals, stroke: strokeVals }) {
+      const shape = [getRandomCircle, getRandomRect][Math.round(Math.random())],
+        [fill, stroke] = [fillVals, strokeVals].map(v => `rgb(${v.join(', ')})`);
+
+      return shape(fill, stroke);
+    }
+
+    [...Array(shapeCount)]
+      .map(() => getRandomFillAndStrokeVals())
+      .forEach(fillAndStrokeVal => svg.appendChild(getRandomShape(fillAndStrokeVal)));
+  //]]></script>
+</svg>

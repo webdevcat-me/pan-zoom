@@ -1,0 +1,40 @@
+body {
+  text-align: center;
+  max-width: 100vw;
+}
+
+.container {
+  padding: 0;
+  max-width: 586.033px;
+  max-height: 586.033px;
+  margin: 0 auto;
+  overflow: hidden;
+  border: 1px solid steelblue;
+  background-color: gray;
+}
+
+img, object {
+  touch-action: none;
+}
+
+img {
+  max-width: 100%;
+  border: 1px solid silver;
+  transform: scale(0.9);
+}
+
+.container object, .container.switch img {
+  display: block;
+}
+
+.container img, .container.switch object {
+  display: none;
+}
+
+button .button-text.raster, button.switch .button-text.svg {
+  display: none;
+}
+
+button.switch .button-text.raster {
+  display: inline;
+}
