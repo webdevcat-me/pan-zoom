@@ -2,14 +2,7 @@ import zoom from './modules/zoom.js';
 import pan from './modules/pan.js';
 
 const optionalZoomFactor = 0.1,
-  container = document.querySelector('.container'),
-  object = document.querySelector('object'),
-  img = document.querySelector('img'),
-  button = document.querySelector('button');
-
-function reset(elements) {
-  elements.forEach(el => el.removeAttribute('style'));
-}
+  object = document.querySelector('object');
 
 // If embedding an SVG using an <object> tag, it's necessary to wait until the
 // page has loaded before querying its `contentDocument`, otherwise it will be
@@ -17,15 +10,18 @@ function reset(elements) {
 
 window.addEventListener('load', function () {
   const svg = object.contentDocument.querySelector('svg'),
-    pannableAndZoomableElements = [img, svg];
+    targetEl = svg.querySelector('g'),
+    pointer = svg.querySelector('#pointer'),
+    options = { passive: false };
 
-  button.addEventListener('click', () => {
-    [button, container].forEach(el => el.classList.toggle('switch'));
-    reset(pannableAndZoomableElements);
-  });
+  svg.addEventListener('wheel', e => zoom(targetEl, e, optionalZoomFactor), options);
+  svg.addEventListener('pointerdown', e => pan(svg, targetEl, e), options);
 
-  pannableAndZoomableElements.forEach(el => {
-    el.addEventListener('wheel', e => zoom(el, e, optionalZoomFactor), { passive: false });
-    el.addEventListener('pointerdown', e => pan(el, e), { passive: false });
+  svg.addEventListener('pointermove', e => {
+    const pt = new DOMPoint(e.clientX, e.clientY),
+      svgP = pt.matrixTransform(targetEl.getScreenCTM().inverse());
+
+    pointer.setAttributeNS(null, 'cx', svgP.x);
+    pointer.setAttributeNS(null, 'cy', svgP.y);
   });
 });

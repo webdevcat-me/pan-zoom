@@ -1,6 +1,7 @@
 # Pan-Zoom
 
-Pan/zoom library for web browsers. Hold and drag an element to pan. Use the mouse wheel to zoom. See `src/app.js` for a usage example.
+Pan/zoom library for SVG elements. Hold and drag to pan. Use the mouse wheel to
+zoom. See `src/app.js` for a usage example.
 
 ## To view the demo using Docker
 

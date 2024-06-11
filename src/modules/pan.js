@@ -2,13 +2,6 @@ import getComputedTransformMatrix from './utils.js';
 
 const minDistanceThreshold = 5;
 
-function setToCurrentPointerCoords(point, e) {
-  point.x = e.clientX;
-  point.y = e.clientY;
-
-  return point;
-}
-
 function distanceBetween({ x: x1, y: y1 }, { x: x2, y: y2 }) {
   return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
 }
@@ -27,35 +20,45 @@ function getTranslateMatrix(startPt, movePt) {
   return translateMatrix.translate(movePt.x - startPt.x, movePt.y - startPt.y);
 }
 
-export default function (el, e) {
+export default function (svg, el, e) {
   e.preventDefault();
 
   const mtx = getComputedTransformMatrix(el),
-    startPt = new DOMPoint(e.clientX, e.clientY),
-    movePt = new DOMPoint();
+    inverseScreenCTM = el.getScreenCTM().inverse();
 
-  let isPanning = false;
+  let startPt = new DOMPoint(e.clientX, e.clientY),
+    movePt = new DOMPoint(),
+    isPanning = false;
 
   function pointerMove(e) {
-    setToCurrentPointerCoords(movePt, e);
+    movePt.x = e.clientX;
+    movePt.y = e.clientY;
 
     if (!isPanning && minDistanceThresholdIsMet(startPt, movePt)) {
       isPanning = true;
       e.target.setPointerCapture(e.pointerId);
-      setToCurrentPointerCoords(startPt, e);
+
+      startPt.x = e.clientX;
+      startPt.y = e.clientY;
+      startPt = startPt.matrixTransform(inverseScreenCTM);
+
       stopEventPropagationToChildren(el, 'click');
     }
 
     if (isPanning) {
-      el.style.transform = getTranslateMatrix(startPt, movePt).multiply(mtx);
+      movePt.x = e.clientX;
+      movePt.y = e.clientY;
+      movePt = movePt.matrixTransform(inverseScreenCTM);
+
+      el.style.transform = mtx.multiply(getTranslateMatrix(startPt, movePt));
     }
   }
 
-  el.addEventListener('pointermove', pointerMove);
+  svg.addEventListener('pointermove', pointerMove);
 
-  el.addEventListener(
+  svg.addEventListener(
     'pointerup',
-    () => el.removeEventListener('pointermove', pointerMove),
+    () => svg.removeEventListener('pointermove', pointerMove),
     { once: true }
   );
 }

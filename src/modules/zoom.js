@@ -8,35 +8,41 @@ function getScale(e, factor) {
   return zoomIn(e.deltaY) ? 1 + factor : 1 - factor;
 }
 
-function getFocalPointBeforeTransform(el, e) {
-  const { x, y, width, height } = el.getBoundingClientRect();
+function getFocalPointBeforeTransform(el, e, inverseScreenCTM) {
+  const { x, y, width, height } = el.getBoundingClientRect(),
+    pointer = (new DOMPoint(e.clientX, e.clientY)).matrixTransform(inverseScreenCTM),
+    origin = (new DOMPoint(x, y)).matrixTransform(inverseScreenCTM),
+    terminus = (new DOMPoint(x + width, y + height)).matrixTransform(inverseScreenCTM);
 
   return {
-    x: e.clientX,
-    y: e.clientY,
+    x: pointer.x,
+    y: pointer.y,
     relativeToImageSize: {
-      x: (e.clientX - x) / width,
-      y: (e.clientY - y) / height
+      x: (pointer.x - origin.x) / (terminus.x - origin.x),
+      y: (pointer.y - origin.y) / (terminus.y - origin.y)
     }
   };
 }
 
-function getFocalPointAfterTransform(el, fpBeforeTrans) {
+function getFocalPointAfterTransform(el, fpBeforeTrans, inverseScreenCTM) {
   const { x, y, width, height } = el.getBoundingClientRect(),
+    origin = (new DOMPoint(x, y)).matrixTransform(inverseScreenCTM),
+    terminus = (new DOMPoint(x + width, y + height)).matrixTransform(inverseScreenCTM),
     relativeFocalPoint = fpBeforeTrans.relativeToImageSize;
 
   return {
-    x: x + width * relativeFocalPoint.x,
-    y: y + height * relativeFocalPoint.y
+    x: origin.x + (terminus.x - origin.x) * relativeFocalPoint.x,
+    y: origin.y + (terminus.y - origin.y) * relativeFocalPoint.y
   };
 }
 
 function getTranslateMatrix(el, e, scaleMatrix) {
-  const fpBeforeTrans = getFocalPointBeforeTransform(el, e);
+  const inverseScreenCTM = el.getScreenCTM().inverse(),
+    fpBeforeTrans = getFocalPointBeforeTransform(el, e, inverseScreenCTM);
 
   el.style.transform = scaleMatrix;
 
-  const fpAfterTrans = getFocalPointAfterTransform(el, fpBeforeTrans),
+  const fpAfterTrans = getFocalPointAfterTransform(el, fpBeforeTrans, inverseScreenCTM),
     translateMatrix = new DOMMatrix();
 
   return translateMatrix.translate(
@@ -52,5 +58,5 @@ export default function (el, e, factor = 0.1) {
     scale = getScale(e, factor),
     transMtx = getTranslateMatrix(el, e, mtx.scale(scale));
 
-  el.style.transform = transMtx.multiply(mtx).scale(scale);
+  el.style.transform = mtx.multiply(transMtx).scale(scale);
 }

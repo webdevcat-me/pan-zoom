@@ -1,6 +1,6 @@
 {
   "name": "pan-zoom",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "browser": "index.js",
   "devDependencies": {
     "esbuild": "^0.20.2",
